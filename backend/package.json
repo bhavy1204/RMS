@@ -11,6 +11,7 @@
     "seed-items": "node scripts/seedMenuItem.js",
     "seed-order": "node scripts/seedOrder.js",
     "seed-customer": "node scripts/seedCustomer.js",
+    "seed-table": "node scripts/seedTable.js",
     "seed": "node scripts/seed.js"
   },
   "keywords": ["restaurant", "qr-menu", "api"],
