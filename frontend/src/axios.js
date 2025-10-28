@@ -1,16 +1,27 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:3000", // your backend URL
-  withCredentials: true, // IMPORTANT: allows cookies to be sent
+  baseURL: "http://localhost:5000", // Backend URL
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
-// App Flow
-// App mounts → useEffect dispatches fetchUser.
-// If accessToken is valid → you get user.
-// If accessToken expired → Axios hits /refresh, gets a new one, retries → you still get user.
-// If refresh also fails (user really logged out) → thunk rejects, state resets, you show login page.
+// Request interceptor to add auth token
+api.interceptors.request.use(
+  (config) => {
+    const accessToken = localStorage.getItem("accessToken");
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
+// Response interceptor to handle token refresh
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -20,11 +31,27 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        await api.post("v1/users/refreshToken");
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (!refreshToken) {
+          throw new Error("No refresh token");
+        }
+
+        const response = await axios.post(
+          "http://localhost:5000/api/auth/refresh",
+          { refreshToken }
+        );
+
+        const { accessToken, refreshToken: newRefreshToken } = response.data.data;
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("refreshToken", newRefreshToken);
+
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
         console.error("Refresh failed:", refreshError);
-        // maybe dispatch logout here if using Redux
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        window.location.href = "/login";
       }
     }
 

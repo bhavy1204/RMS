@@ -26,7 +26,7 @@ const config = {
   RATE_LIMIT_MAX_REQUESTS: process.env.RATE_LIMIT_MAX_REQUESTS || 100,
 
   // CORS configuration
-  CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:5173',
 
   // Email configuration (for future use)
   EMAIL_HOST: process.env.EMAIL_HOST || '',
