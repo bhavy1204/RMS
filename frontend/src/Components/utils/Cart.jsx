@@ -182,7 +182,7 @@ const Cart = ({ isOpen, onClose }) => {
                       <div className="flex-1">
                         <h4 className="font-semibold text-gray-800">{cartItem.menuItem.name}</h4>
                         <p className="text-orange-500 font-bold">
-                          ${cartItem.menuItem.price.toFixed(2)}
+                          <span>&#8377; </span>{cartItem.menuItem.price.toFixed(2)}
                         </p>
                       </div>
                       <button
@@ -221,7 +221,7 @@ const Cart = ({ isOpen, onClose }) => {
               <div className="flex justify-between items-center mb-4">
                 <span className="text-lg font-bold text-gray-800">Total:</span>
                 <span className="text-xl font-bold text-orange-500">
-                  ${total.toFixed(2)}
+                  <span>&#8377; </span>{total.toFixed(2)}
                 </span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
