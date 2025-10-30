@@ -82,47 +82,44 @@ const Cart = ({ isOpen, onClose }) => {
   };
 
   const startRazorpay = async () => {
-    const ok = await loadRazorpayScript();
-    if (!ok) {
-      toast.error('Failed to load Razorpay. Using dummy payment.');
-      return startDummyRazorpay();
+    const res = await loadRazorpayScript();
+    if (!res) {
+      toast.error('Razorpay SDK failed to load.');
+      return;
     }
 
     try {
-      const key = import.meta.env.VITE_RAZORPAY_KEY_ID;
-      if (!key) {
-        toast('Razorpay key missing. Using dummy payment.', { icon: '⚠️' });
-        return startDummyRazorpay();
-      }
+      const amount = total; // total in rupees
+      const { data } = await api.post('api/payments/create-order', { amount });
 
-      const amountPaise = Math.round(total * 100);
       const options = {
-        key,
-        amount: amountPaise,
-        currency: 'INR',
-        name: 'Restaurant',
-        description: 'Order payment',
-        handler: async function () {
-          await handleCheckout({ paid: true });
+        key: data.key,
+        amount: data.amount,
+        currency: data.currency,
+        name: 'Restaurant App',
+        description: 'Order Payment',
+        order_id: data.orderId,
+        handler: async (response) => {
+          const verifyRes = await api.post('/payments/verify', response);
+
+          if (verifyRes.data.success) {
+            await handleCheckout({ paid: true });
+            toast.success('Payment successful!');
+          } else {
+            toast.error('Payment verification failed!');
+          }
         },
-        prefill: {
-          name: '',
-          email: '',
-          contact: ''
-        },
-        theme: { color: '#f97316' }
+        theme: { color: '#f97316' },
       };
 
-      const rz = new window.Razorpay(options);
-      rz.on('payment.failed', function () {
-        toast.error('Payment failed');
-      });
-      rz.open();
-    } catch (err) {
-      toast.error('Payment init failed');
-      startDummyRazorpay();
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+    } catch (error) {
+      console.error(error);
+      toast.error('Error initializing payment');
     }
   };
+
 
   const total = items.reduce(
     (sum, item) => sum + item.menuItem.price * item.quantity,
@@ -141,9 +138,8 @@ const Cart = ({ isOpen, onClose }) => {
 
       {/* Cart Sidebar */}
       <div
-        className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-xl z-50 transform transition-transform duration-300 ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-xl z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
@@ -169,7 +165,7 @@ const Cart = ({ isOpen, onClose }) => {
             {items.length === 0 ? (
               <div className="text-center py-20">
                 <svg className="w-24 h-24 mx-auto text-gray-300" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M7 18c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM1 2v2h2l3.6 7.59-1.35 2.45c-.15.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12L8.1 13h7.45c.75 0 1.41-.42 1.75-1.03L21.7 4H5.21l-.94-2H1zm16 16c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                  <path d="M7 18c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM1 2v2h2l3.6 7.59-1.35 2.45c-.15.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12L8.1 13h7.45c.75 0 1.41-.42 1.75-1.03L21.7 4H5.21l-.94-2H1zm16 16c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
                 </svg>
                 <p className="text-gray-600 mt-4">Your cart is empty</p>
               </div>

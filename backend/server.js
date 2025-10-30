@@ -14,6 +14,7 @@ const authRoutes = require('./routes/auth');
 const menuRoutes = require('./routes/menu');
 const tableRoutes = require('./routes/tables');
 const orderRoutes = require('./routes/orders');
+const paymentRoutes = require('./routes/payment');
 
 // Import middleware
 const { generalLimiter } = require('./middleware/rateLimiting');
@@ -78,6 +79,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/tables', tableRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Public menu route for QR code scanning
 app.get('/api/menu/by-table/:slug', async (req, res) => {
