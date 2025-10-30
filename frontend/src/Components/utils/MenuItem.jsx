@@ -44,7 +44,7 @@ const MenuItem = ({ item, onAddToCart }) => {
         <div className="flex justify-between items-start mb-2">
           <h3 className="text-lg font-semibold text-gray-800">{item.name}</h3>
           <span className="text-orange-500 font-bold text-lg">
-            ${item.price.toFixed(2)}
+            <span>&#8377; </span>{item.price.toFixed(2)}
           </span>
         </div>
 
