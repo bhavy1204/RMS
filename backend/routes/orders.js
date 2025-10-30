@@ -26,6 +26,7 @@ router.patch('/me/:id/cancel', validateObjectId('id'), authorize('customer'), or
 router.get('/', authorize('staff', 'admin'), validatePagination, orderController.getOrders);
 router.get('/:id', authorize('staff', 'admin'), validateObjectId('id'), orderController.getOrder);
 router.patch('/:id/status', authorize('staff', 'admin'), validateObjectId('id'), validateOrderStatus, orderController.updateOrderStatus);
+router.patch('/:id/payment', authorize('staff', 'admin'), validateObjectId('id'), orderController.updateOrderPayment);
 
 // Admin only routes
 router.get('/analytics/overview', authorize('admin'), orderController.getOrderAnalytics);

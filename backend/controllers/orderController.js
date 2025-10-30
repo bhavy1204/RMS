@@ -414,6 +414,44 @@ const getOrderAnalytics = async (req, res) => {
   }
 };
 
+// Update payment status/method (Staff and Admin)
+const updateOrderPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { paymentStatus = 'paid', paymentMethod = 'cash' } = req.body;
+
+    const order = await Order.findById(id);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    order.paymentStatus = paymentStatus;
+    order.paymentMethod = paymentMethod;
+    await order.save();
+
+    await order.populate([
+      { path: 'tableId', select: 'number qrSlug' },
+      { path: 'customerId', select: 'name email' },
+      { path: 'items.menuItemId', select: 'name price' }
+    ]);
+
+    res.json({
+      success: true,
+      message: 'Payment updated successfully',
+      data: { order }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update payment',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createOrder,
   getOrders,
@@ -421,7 +459,8 @@ module.exports = {
   updateOrderStatus,
   getMyOrders,
   cancelOrder,
-  getOrderAnalytics
+  getOrderAnalytics,
+  updateOrderPayment
 };
 
 
