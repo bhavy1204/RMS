@@ -30,3 +30,4 @@ router.get('/qr/bulk-generate', qrLimiter, authorize('admin'), tableController.b
 
 module.exports = router;
 
+

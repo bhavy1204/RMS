@@ -100,3 +100,5 @@ const MenuItem = ({ item, onAddToCart }) => {
 
 export default MenuItem;
 
+
+

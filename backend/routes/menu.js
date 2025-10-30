@@ -10,6 +10,7 @@ const {
   validatePagination,
   handleValidationErrors
 } = require('../middleware/validation');
+const { uploadSingle } = require('../utils/fileUpload');
 
 // Public routes (no authentication required)
 router.get('/categories', generalLimiter, menuController.getCategories);
@@ -25,8 +26,8 @@ router.put('/categories/:id', authorize('admin'), validateObjectId('id'), valida
 router.delete('/categories/:id', authorize('admin'), validateObjectId('id'), menuController.deleteCategory);
 
 // Menu item management (Admin only)
-router.post('/items', authorize('admin'), validateMenuItem, menuController.createMenuItem);
-router.put('/items/:id', authorize('admin'), validateObjectId('id'), validateMenuItem, menuController.updateMenuItem);
+router.post('/items', authorize('admin'), uploadSingle('image'), validateMenuItem, menuController.createMenuItem);
+router.put('/items/:id', authorize('admin'), validateObjectId('id'), uploadSingle('image'), validateMenuItem, menuController.updateMenuItem);
 router.delete('/items/:id', authorize('admin'), validateObjectId('id'), menuController.deleteMenuItem);
 
 // Availability toggle (Staff and Admin)
@@ -36,4 +37,5 @@ router.patch('/items/:id/toggle-availability', authorize('staff', 'admin'), vali
 router.get('/analytics', authorize('admin'), menuController.getMenuAnalytics);
 
 module.exports = router;
+
 

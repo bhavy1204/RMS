@@ -2,14 +2,18 @@ import { useDispatch, useSelector } from 'react-redux';
 import { createOrder } from '../../store/slices/orderSlice';
 import { removeFromCart, updateQuantity, clearCart } from '../../store/slices/cartSlice';
 import toast from 'react-hot-toast';
+import { useState } from 'react';
+import api from '../../axios';
 
 const Cart = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
   const { items, tableId, tableNumber } = useSelector((state) => state.cart);
   const { isLoading } = useSelector((state) => state.orders);
   const { user } = useSelector((state) => state.auth);
+  const [paying, setPaying] = useState(false);
+  const [showPayModal, setShowPayModal] = useState(false);
 
-  const handleCheckout = async () => {
+  const handleCheckout = async ({ paid } = { paid: false }) => {
     if (items.length === 0) {
       toast.error('Your cart is empty');
       return;
@@ -39,6 +43,14 @@ const Cart = ({ isOpen, onClose }) => {
       ),
     };
 
+    if (paid) {
+      orderData.paymentStatus = 'paid';
+      orderData.paymentMethod = 'digital';
+      orderData.specialInstructions = `Paid via Razorpay (Dummy) - TXN-${Math.random()
+        .toString(36)
+        .slice(2, 10)}`;
+    }
+
     try {
       await dispatch(createOrder(orderData));
       toast.success('Order placed successfully!');
@@ -48,6 +60,66 @@ const Cart = ({ isOpen, onClose }) => {
       toast.error(error.message || 'Failed to place order');
     }
   };
+
+  const loadRazorpayScript = () => new Promise((resolve) => {
+    if (window.Razorpay) return resolve(true);
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+
+  const startDummyRazorpay = async () => {
+    setShowPayModal(true);
+    setPaying(true);
+    // Simulate a 2s payment processing
+    setTimeout(async () => {
+      setPaying(false);
+      setShowPayModal(false);
+      await handleCheckout({ paid: true });
+    }, 2000);
+  };
+
+  const startRazorpay = async () => {
+    const res = await loadRazorpayScript();
+    if (!res) {
+      toast.error('Razorpay SDK failed to load.');
+      return;
+    }
+
+    try {
+      const amount = total; // total in rupees
+      const { data } = await api.post('api/payments/create-order', { amount });
+
+      const options = {
+        key: data.key,
+        amount: data.amount,
+        currency: data.currency,
+        name: 'Restaurant App',
+        description: 'Order Payment',
+        order_id: data.orderId,
+        handler: async (response) => {
+          const verifyRes = await api.post('/payments/verify', response);
+
+          if (verifyRes.data.success) {
+            await handleCheckout({ paid: true });
+            toast.success('Payment successful!');
+          } else {
+            toast.error('Payment verification failed!');
+          }
+        },
+        theme: { color: '#f97316' },
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+    } catch (error) {
+      console.error(error);
+      toast.error('Error initializing payment');
+    }
+  };
+
 
   const total = items.reduce(
     (sum, item) => sum + item.menuItem.price * item.quantity,
@@ -66,9 +138,8 @@ const Cart = ({ isOpen, onClose }) => {
 
       {/* Cart Sidebar */}
       <div
-        className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-xl z-50 transform transition-transform duration-300 ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-xl z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
@@ -94,7 +165,7 @@ const Cart = ({ isOpen, onClose }) => {
             {items.length === 0 ? (
               <div className="text-center py-20">
                 <svg className="w-24 h-24 mx-auto text-gray-300" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M7 18c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM1 2v2h2l3.6 7.59-1.35 2.45c-.15.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12L8.1 13h7.45c.75 0 1.41-.42 1.75-1.03L21.7 4H5.21l-.94-2H1zm16 16c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                  <path d="M7 18c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM1 2v2h2l3.6 7.59-1.35 2.45c-.15.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12L8.1 13h7.45c.75 0 1.41-.42 1.75-1.03L21.7 4H5.21l-.94-2H1zm16 16c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
                 </svg>
                 <p className="text-gray-600 mt-4">Your cart is empty</p>
               </div>
@@ -148,17 +219,44 @@ const Cart = ({ isOpen, onClose }) => {
                   ${total.toFixed(2)}
                 </span>
               </div>
-              <button
-                onClick={handleCheckout}
-                disabled={isLoading}
-                className="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition disabled:opacity-50"
-              >
-                {isLoading ? 'Processing...' : 'Checkout'}
-              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button
+                  onClick={() => handleCheckout()}
+                  disabled={isLoading}
+                  className="w-full bg-gray-200 text-gray-900 py-3 rounded-lg font-semibold hover:bg-gray-300 transition disabled:opacity-50"
+                >
+                  {isLoading ? 'Placing…' : 'Place Order (Cash)'}
+                </button>
+                <button
+                  onClick={startRazorpay}
+                  disabled={isLoading || paying}
+                  className="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition disabled:opacity-50"
+                >
+                  {paying ? 'Paying…' : 'Pay with Razorpay'}
+                </button>
+              </div>
             </div>
           )}
         </div>
       </div>
+
+      {showPayModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
+            <h3 className="text-lg font-semibold mb-2">Razorpay (Dummy)</h3>
+            <p className="text-sm text-gray-600">Processing your payment…</p>
+            <div className="mt-4 flex justify-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-orange-500"></div>
+            </div>
+            <button
+              onClick={() => setShowPayModal(false)}
+              className="mt-6 text-sm text-gray-600 hover:text-gray-800"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };

@@ -1,10 +1,30 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 const QRScanner = () => {
   const navigate = useNavigate();
   const [slug, setSlug] = useState('');
+  const [cameraSupported, setCameraSupported] = useState(false);
+  const [cameraActive, setCameraActive] = useState(false);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const rafRef = useRef(0);
+
+  const parseSlugFromText = (text) => {
+    try {
+      // If full URL like https://.../m/table-t1
+      const mMatch = text.match(/\/m\/([^/?#]+)/i);
+      if (mMatch && mMatch[1]) return mMatch[1];
+      // If full URL like https://.../table/table-t1
+      const tMatch = text.match(/\/table\/([^/?#]+)/i);
+      if (tMatch && tMatch[1]) return tMatch[1];
+      // Otherwise treat whole string as slug
+      return text.trim();
+    } catch {
+      return text.trim();
+    }
+  };
 
   const handleManualEntry = (e) => {
     e.preventDefault();
@@ -12,6 +32,56 @@ const QRScanner = () => {
       navigate(`/table/${slug.trim()}`);
     } else {
       toast.error('Please enter a table slug');
+    }
+  };
+
+  // Camera + BarcodeDetector setup
+  useEffect(() => {
+    const supported = 'BarcodeDetector' in window;
+    setCameraSupported(!!supported);
+    return () => stopCamera();
+  }, []);
+
+  const stopCamera = () => {
+    setCameraActive(false);
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+  };
+
+  const startCamera = async () => {
+    if (!('BarcodeDetector' in window)) {
+      toast.error('Live scanner not supported on this browser');
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+      setCameraActive(true);
+      const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+      const scan = async () => {
+        if (!videoRef.current) return;
+        try {
+          const barcodes = await detector.detect(videoRef.current);
+          if (barcodes && barcodes.length > 0) {
+            const raw = barcodes[0].rawValue || barcodes[0].rawValue || '';
+            const foundSlug = parseSlugFromText(raw);
+            stopCamera();
+            if (foundSlug) navigate(`/table/${foundSlug}`);
+            return;
+          }
+        } catch {}
+        rafRef.current = requestAnimationFrame(scan);
+      };
+      scan();
+    } catch (err) {
+      toast.error('Failed to access camera');
     }
   };
 
@@ -37,6 +107,24 @@ const QRScanner = () => {
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Scan Table QR Code</h1>
           <p className="text-gray-600">Point your camera at the QR code or enter the table slug</p>
         </div>
+
+        {cameraSupported && (
+          <div className="mb-6">
+            {!cameraActive ? (
+              <button onClick={startCamera} className="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition">
+                Enable Camera Scanner
+              </button>
+            ) : (
+              <div className="space-y-3">
+                <div className="relative rounded-lg overflow-hidden border">
+                  <video ref={videoRef} className="w-full h-64 object-cover" muted playsInline />
+                  <div className="absolute inset-0 border-2 border-dashed border-orange-500 pointer-events-none m-6 rounded-lg"></div>
+                </div>
+                <button onClick={stopCamera} className="w-full border py-2 rounded-lg">Stop Scanner</button>
+              </div>
+            )}
+          </div>
+        )}
 
         <form onSubmit={handleManualEntry} className="space-y-4">
           <div>
@@ -87,4 +175,6 @@ const QRScanner = () => {
 };
 
 export default QRScanner;
+
+
 

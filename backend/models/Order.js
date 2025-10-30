@@ -56,7 +56,6 @@ const orderSchema = new mongoose.Schema({
   orderNumber: {
     type: String,
     unique: true,
-    required: true
   },
   estimatedReadyTime: {
     type: Date,
@@ -85,8 +84,8 @@ const orderSchema = new mongoose.Schema({
 orderSchema.index({ tableId: 1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ createdAt: -1 });
-orderSchema.index({ orderNumber: 1 });
-orderSchema.index({ customerId: 1 });
+// orderSchema.index({ orderNumber: 1 });
+// orderSchema.index({ customerId: 1 });
 orderSchema.index({ 'items.menuItemId': 1 });
 
 // Virtual for table information
