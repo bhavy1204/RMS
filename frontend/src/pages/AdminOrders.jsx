@@ -4,6 +4,7 @@ import { fetchMyOrders } from '../store/slices/orderSlice';
 import AdminNav from '../Components/utils/AdminNav';
 import toast from 'react-hot-toast';
 import api from '../axios';
+import { openInvoiceWindow } from '../Components/utils/invoice';
 
 const AdminOrders = () => {
   const dispatch = useDispatch();
@@ -75,6 +76,7 @@ const AdminOrders = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -112,6 +114,32 @@ const AdminOrders = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(order.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => openInvoiceWindow(order)}
+                            className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200"
+                          >
+                            Download Bill
+                          </button>
+                          {order.paymentStatus !== 'paid' && (
+                            <button
+                              onClick={async () => {
+                                try {
+                                  await api.patch(`/api/orders/${order._id}/payment`, { paymentStatus: 'paid', paymentMethod: 'cash' });
+                                  toast.success('Marked as paid');
+                                  refresh();
+                                } catch (err) {
+                                  toast.error(err.response?.data?.message || err.message || 'Failed');
+                                }
+                              }}
+                              className="px-3 py-1 rounded bg-green-600 text-white hover:bg-green-700"
+                            >
+                              Mark Paid (Cash)
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

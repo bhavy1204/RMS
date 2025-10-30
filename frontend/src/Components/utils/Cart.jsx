@@ -4,6 +4,7 @@ import { removeFromCart, updateQuantity, clearCart } from '../../store/slices/ca
 import toast from 'react-hot-toast';
 import { useState } from 'react';
 import api from '../../axios';
+import { openInvoiceWindow } from './invoice';
 
 const Cart = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
@@ -12,6 +13,8 @@ const Cart = ({ isOpen, onClose }) => {
   const { user } = useSelector((state) => state.auth);
   const [paying, setPaying] = useState(false);
   const [showPayModal, setShowPayModal] = useState(false);
+
+  const [invoiceOrder, setInvoiceOrder] = useState(null);
 
   const handleCheckout = async ({ paid } = { paid: false }) => {
     if (items.length === 0) {
@@ -52,10 +55,12 @@ const Cart = ({ isOpen, onClose }) => {
     }
 
     try {
-      await dispatch(createOrder(orderData));
+      const res = await dispatch(createOrder(orderData)).unwrap();
+      const created = res?.data?.order || res?.order || null;
+      setInvoiceOrder(created);
       toast.success('Order placed successfully!');
       dispatch(clearCart());
-      onClose();
+      // Keep drawer open to show invoice modal below
     } catch (error) {
       toast.error(error.message || 'Failed to place order');
     }
@@ -235,6 +240,22 @@ const Cart = ({ isOpen, onClose }) => {
                   {paying ? 'Paying…' : 'Pay with Razorpay'}
                 </button>
               </div>
+              {invoiceOrder && (
+                <div className="mt-4 p-3 bg-white border rounded">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm text-gray-600">Order # {invoiceOrder.orderNumber}</div>
+                      <div className="font-semibold">Bill ready</div>
+                    </div>
+                    <button
+                      onClick={() => openInvoiceWindow(invoiceOrder)}
+                      className="px-3 py-2 bg-black text-white rounded"
+                    >
+                      Download Bill
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

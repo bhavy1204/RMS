@@ -37,8 +37,6 @@ const tableSchema = new mongoose.Schema({
 });
 
 // Indexes for performance
-// tableSchema.index({ qrSlug: 1 });
-// tableSchema.index({ number: 1 });
 tableSchema.index({ isActive: 1 });
 
 // Generate QR slug before saving
