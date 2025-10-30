@@ -127,3 +127,5 @@ MONGODB_URI=mongodb://localhost:27017/restaurant-qr-menu
 
 The frontend is fully connected to your backend. Start both servers and begin using the application!
 
+
+

@@ -1,16 +1,44 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMyOrders } from '../store/slices/orderSlice';
 import AdminNav from '../Components/utils/AdminNav';
 import toast from 'react-hot-toast';
+import api from '../axios';
 
 const AdminOrders = () => {
   const dispatch = useDispatch();
   const { myOrders, isLoading } = useSelector((state) => state.orders);
+  const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    dispatch(fetchMyOrders({}));
-  }, [dispatch]);
+    // For admin/staff view, fetch all orders
+    const load = async () => {
+      try {
+        const res = await api.get('/api/orders');
+        setOrders(res.data.data.orders || res.data.data || []);
+      } catch (err) {
+        toast.error(err.response?.data?.message || err.message || 'Failed to load orders');
+      }
+    };
+    load();
+  }, []);
+
+  const refresh = async () => {
+    try {
+      const res = await api.get('/api/orders');
+      setOrders(res.data.data.orders || res.data.data || []);
+    } catch {}
+  };
+
+  const updateStatus = async (orderId, status) => {
+    try {
+      await api.patch(`/api/orders/${orderId}/status`, { status });
+      toast.success('Status updated');
+      refresh();
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to update');
+    }
+  };
 
   const getStatusColor = (status) => {
     const colors = {
@@ -34,7 +62,7 @@ const AdminOrders = () => {
             <div className="flex justify-center py-10">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
             </div>
-          ) : myOrders.length === 0 ? (
+          ) : orders.length === 0 ? (
             <p className="text-gray-600">No orders found</p>
           ) : (
             <div className="overflow-x-auto">
@@ -50,7 +78,7 @@ const AdminOrders = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {myOrders.map((order) => (
+                  {orders.map((order) => (
                     <tr key={order._id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {order.orderNumber}
@@ -65,9 +93,22 @@ const AdminOrders = () => {
                         ${order.total.toFixed(2)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                          {order.status}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
+                            {order.status}
+                          </span>
+                          <select
+                            className="ml-2 border rounded px-2 py-1 text-xs"
+                            value={order.status}
+                            onChange={(e) => updateStatus(order._id, e.target.value)}
+                          >
+                            <option value="placed">placed</option>
+                            <option value="preparing">preparing</option>
+                            <option value="ready">ready</option>
+                            <option value="served">served</option>
+                            <option value="canceled">canceled</option>
+                          </select>
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(order.createdAt).toLocaleDateString()}

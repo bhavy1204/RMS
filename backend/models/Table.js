@@ -9,7 +9,6 @@ const tableSchema = new mongoose.Schema({
   },
   qrSlug: {
     type: String,
-    required: [true, 'QR slug is required'],
     unique: true,
     lowercase: true,
     trim: true
@@ -38,12 +37,13 @@ const tableSchema = new mongoose.Schema({
 });
 
 // Indexes for performance
-tableSchema.index({ qrSlug: 1 });
-tableSchema.index({ number: 1 });
+// tableSchema.index({ qrSlug: 1 });
+// tableSchema.index({ number: 1 });
 tableSchema.index({ isActive: 1 });
 
 // Generate QR slug before saving
 tableSchema.pre('save', function(next) {
+   console.log('>> Pre-save hook running for:', this.number); 
   if (!this.qrSlug) {
     this.qrSlug = `table-${this.number.toLowerCase().replace(/\s+/g, '-')}`;
   }

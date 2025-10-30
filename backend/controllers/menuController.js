@@ -268,9 +268,14 @@ const deleteCategory = async (req, res) => {
 };
 
 // Create menu item (Admin only)
+const { getFileUrl, deleteFile } = require('../utils/fileUpload');
+
 const createMenuItem = async (req, res) => {
   try {
     const menuItemData = req.body;
+    if (req.file) {
+      menuItemData.imageUrl = getFileUrl(req.file.filename);
+    }
 
     const menuItem = new MenuItem(menuItemData);
     await menuItem.save();
@@ -299,6 +304,9 @@ const updateMenuItem = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
+    if (req.file) {
+      updateData.imageUrl = getFileUrl(req.file.filename);
+    }
 
     const menuItem = await MenuItem.findByIdAndUpdate(
       id,
@@ -439,4 +447,5 @@ module.exports = {
   toggleAvailability,
   getMenuAnalytics
 };
+
 

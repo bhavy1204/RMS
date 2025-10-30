@@ -29,8 +29,9 @@ const TableMenuPage = () => {
 
   useEffect(() => {
     if (currentTable) {
-      // Set table in cart state
-      dispatch(setTable({ number: currentTable.number, id: currentTable._id }));
+      // Set table in cart state (handle id or _id from backend)
+      const tableId = currentTable.id || currentTable._id;
+      dispatch(setTable({ number: currentTable.number, id: tableId }));
       
       // Fetch menu items
       dispatch(fetchCategories());
@@ -173,4 +174,6 @@ const TableMenuPage = () => {
 };
 
 export default TableMenuPage;
+
+
 

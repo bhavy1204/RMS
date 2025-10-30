@@ -37,7 +37,7 @@ const tableSlice = createSlice({
       })
       .addCase(fetchTableBySlug.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.currentTable = action.payload;
+        state.currentTable = action.payload?.table || action.payload || null;
       })
       .addCase(fetchTableBySlug.rejected, (state, action) => {
         state.isLoading = false;
@@ -48,4 +48,6 @@ const tableSlice = createSlice({
 
 export const { clearError, clearTable } = tableSlice.actions;
 export default tableSlice.reducer;
+
+
 
