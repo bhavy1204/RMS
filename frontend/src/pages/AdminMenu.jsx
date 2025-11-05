@@ -118,7 +118,7 @@ const AdminMenu = () => {
                 <div key={item._id} className="border rounded-lg p-4 hover:shadow-lg transition">
                   <h3 className="font-semibold text-lg mb-2">{item.name}</h3>
                   <p className="text-gray-600 text-sm mb-2">{item.description}</p>
-                  <p className="text-orange-500 font-bold">${item.price.toFixed(2)}</p>
+                  <p className="text-orange-500 font-bold">&#8377;{item.price.toFixed(2)}</p>
                   <div className="mt-4 flex gap-2">
                     <button onClick={() => openEdit(item)} className="flex-1 bg-orange-500 text-white py-2 rounded hover:bg-orange-600 transition">
                       Edit

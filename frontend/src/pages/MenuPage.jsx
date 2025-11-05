@@ -34,12 +34,21 @@ const MenuPage = () => {
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50">
+    <div className="min-h-screen bg-linear-to-br from-orange-50 to-red-50">
       {/* Header */}
       <header className="bg-white shadow-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">Restaurant Menu</h1>
           <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate('/login')}
+              className="text-gray-600 hover:text-orange-500 transition flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 3h4a2 2 0 012 2v4m0 6v4a2 2 0 01-2 2h-4M9 21H5a2 2 0 01-2-2v-4m0-6V5a2 2 0 012-2h4m3 7a4 4 0 110-8 4 4 0 010 8zm0 0v5m0 0l-2-2m2 2l2-2" />
+              </svg>
+              Login
+            </button>
             <button
               onClick={() => navigate('/scan')}
               className="text-gray-600 hover:text-orange-500 transition flex items-center gap-2"
