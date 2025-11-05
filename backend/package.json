@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "build": "echo 'No build step for backend'",
     "seed-admin": "node scripts/seedAdmin.js",
     "seed-category": "node scripts/seedCategory.js",
     "seed-items": "node scripts/seedMenuItem.js",
