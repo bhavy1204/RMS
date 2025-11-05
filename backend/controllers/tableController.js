@@ -15,7 +15,7 @@ const generateQRCode = async (req, res) => {
     }
 
     // Generate QR code URL
-    const qrUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/m/${table.qrSlug}`;
+    const qrUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/table/${table.qrSlug}`;
     
     // Generate QR code as data URL
     const qrCodeDataURL = await QRCode.toDataURL(qrUrl, {
@@ -314,7 +314,7 @@ const bulkGenerateQRCodes = async (req, res) => {
 
     const qrCodes = await Promise.all(
       tables.map(async (table) => {
-        const qrUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/m/${table.qrSlug}`;
+        const qrUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/table/${table.qrSlug}`;
         const qrCodeDataURL = await QRCode.toDataURL(qrUrl, {
           width: 200,
           margin: 2,
