@@ -95,20 +95,28 @@ const TableMenuPage = () => {
               <h1 className="text-2xl font-bold text-gray-800">Restaurant Menu</h1>
               <p className="text-sm text-gray-600">Table {currentTable.number} • {currentTable.location}</p>
             </div>
-            <button
-              onClick={() => setIsCartOpen(true)}
-              className="relative bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition flex items-center gap-2"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-              Cart ({cartCount})
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/login')}
+                className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition"
+              >
+                Log in
+              </button>
+              <button
+                onClick={() => setIsCartOpen(true)}
+                className="relative bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition flex items-center gap-2"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+                Cart ({cartCount})
+              </button>
+            </div>
           </div>
         </div>
       </header>

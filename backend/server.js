@@ -1,4 +1,5 @@
 const express = require('express');
+const http = require('http');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
@@ -23,6 +24,31 @@ const { generalLimiter } = require('./middleware/rateLimiting');
 connectDB();
 
 const app = express();
+const server = http.createServer(app);
+
+// Socket.IO setup
+const { Server } = require('socket.io');
+const io = new Server(server, {
+  cors: {
+    origin: config.CORS_ORIGIN,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  },
+});
+
+app.set('io', io);
+
+io.on('connection', (socket) => {
+  if (config.NODE_ENV !== 'test') {
+    console.log('Socket connected:', socket.id);
+  }
+  socket.on('disconnect', () => {
+    if (config.NODE_ENV !== 'test') {
+      console.log('Socket disconnected:', socket.id);
+    }
+  });
+});
 
 // // Security middleware
 // app.use(helmet({
@@ -184,7 +210,7 @@ app.use((err, req, res, next) => {
 
 // Start server
 const PORT = config.PORT;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running in ${config.NODE_ENV} mode on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
 });

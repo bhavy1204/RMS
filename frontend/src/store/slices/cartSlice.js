@@ -1,11 +1,21 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+// Load persisted table selection from localStorage
+const persistedTable = (() => {
+  try {
+    const raw = localStorage.getItem('cartTable');
+    return raw ? JSON.parse(raw) : null;
+  } catch (_) {
+    return null;
+  }
+})();
+
 const cartSlice = createSlice({
   name: 'cart',
   initialState: {
     items: [],
-    tableNumber: null,
-    tableId: null,
+    tableNumber: persistedTable?.tableNumber || null,
+    tableId: persistedTable?.tableId || null,
   },
   reducers: {
     addToCart: (state, action) => {
@@ -43,15 +53,23 @@ const cartSlice = createSlice({
     setTable: (state, action) => {
       state.tableNumber = action.payload.number;
       state.tableId = action.payload.id;
+      try {
+        localStorage.setItem(
+          'cartTable',
+          JSON.stringify({ tableNumber: state.tableNumber, tableId: state.tableId })
+        );
+      } catch (_) {}
     },
     clearTable: (state) => {
       state.tableNumber = null;
       state.tableId = null;
+      try {
+        localStorage.removeItem('cartTable');
+      } catch (_) {}
     },
     clearCart: (state) => {
+      // Only clear items; keep table selection for subsequent orders
       state.items = [];
-      state.tableNumber = null;
-      state.tableId = null;
     },
   },
 });

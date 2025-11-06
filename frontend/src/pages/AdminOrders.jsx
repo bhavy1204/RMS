@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMyOrders } from '../store/slices/orderSlice';
 import AdminNav from '../Components/utils/AdminNav';
 import toast from 'react-hot-toast';
 import api from '../axios';
 import { openInvoiceWindow } from '../Components/utils/invoice';
+import { io } from 'socket.io-client';
 
 const AdminOrders = () => {
   const dispatch = useDispatch();
@@ -22,6 +23,33 @@ const AdminOrders = () => {
       }
     };
     load();
+  }, []);
+
+  // Socket subscription for live updates
+  useEffect(() => {
+    // derive socket URL from axios baseURL
+    const base = (api?.defaults?.baseURL || '').replace(/\/$/, '');
+    if (!base) return;
+    const socket = io(base, {
+      transports: ['websocket'],
+      withCredentials: true,
+    });
+
+    const handleRefresh = async () => {
+      try {
+        const res = await api.get('/api/orders');
+        setOrders(res.data.data.orders || res.data.data || []);
+      } catch (_) {}
+    };
+
+    socket.on('order:new', handleRefresh);
+    socket.on('order:updated', handleRefresh);
+
+    return () => {
+      socket.off('order:new', handleRefresh);
+      socket.off('order:updated', handleRefresh);
+      socket.close();
+    };
   }, []);
 
   const refresh = async () => {

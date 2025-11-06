@@ -78,6 +78,12 @@ const createOrder = async (req, res) => {
       { path: 'items.menuItemId', select: 'name price' }
     ]);
 
+    // Emit socket event for new order
+    try {
+      const io = req.app.get('io');
+      if (io) io.emit('order:new', order);
+    } catch (_) {}
+
     res.status(201).json({
       success: true,
       message: 'Order placed successfully',
@@ -242,6 +248,12 @@ const updateOrderStatus = async (req, res) => {
       { path: 'customerId', select: 'name email' },
       { path: 'items.menuItemId', select: 'name price' }
     ]);
+
+    // Emit socket event for order status update
+    try {
+      const io = req.app.get('io');
+      if (io) io.emit('order:updated', order);
+    } catch (_) {}
 
     res.json({
       success: true,
@@ -437,6 +449,12 @@ const updateOrderPayment = async (req, res) => {
       { path: 'customerId', select: 'name email' },
       { path: 'items.menuItemId', select: 'name price' }
     ]);
+
+    // Emit socket event for payment update
+    try {
+      const io = req.app.get('io');
+      if (io) io.emit('order:updated', order);
+    } catch (_) {}
 
     res.json({
       success: true,
